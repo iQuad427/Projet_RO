@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 
 ''' Parameters '''
 # Population size
-pop_size = 100
+pop_size = 1000
 # Number of counties
 county_number = 19
 # Number of iterations to run the algorithm
-it = 100
+it = 40
 # Distance between two tested weights
-precision_of_pareto = 1000
+precision_of_pareto = 50
 # Number of breeds at each iteration
-children_fraction_in_population = 0.50
+children_fraction_in_population = 0.75
 amount_of_children = round(children_fraction_in_population * pop_size)
 
 
@@ -153,6 +153,22 @@ def breed(list_score):
         if random.randint(0, 10) == 5:
             new_population[index] = mutate(new_population[index])
     return new_population
+
+
+def filter_value(x, y):
+    x_pareto = []
+    y_pareto = []
+
+    for i in range(len(x)):
+        opt = True
+        for j in range(len(x)):
+            if x[j] > x[i] and y[j] > y[i]:
+                opt = False
+        if opt:
+            x_pareto.append(x[i])
+            y_pareto.append(y[i])
+
+    return x_pareto, y_pareto
 
 
 if __name__ == '__main__':
