@@ -3,7 +3,7 @@ import numpy
 
 """Parameters"""
 # Population size
-pop_size = 10000
+pop_size = 100
 # Number of counties
 number_of_county = 19
 # Number of salesmen
@@ -11,7 +11,7 @@ number_of_truck = 3
 # Number of iterations to run the algorithm
 it = 11
 # Distance between two tested weights
-precision_of_pareto = 50
+precision_of_pareto = 10
 # Number of breeds at each iteration
 children_fraction_in_population = 0.75
 amount_of_children = round(children_fraction_in_population * pop_size)
@@ -52,21 +52,41 @@ def genetic_generate_init():
     """
     pop = []
     for i in range(pop_size):
-        pop.append([0] * (number_of_county + number_of_truck))
+        pop.append([5] * (number_of_county + number_of_truck))
         cities_left = number_of_county
-        for j in range(1, number_of_truck):
-            pop[i][-j] = randint(1, cities_left - number_of_truck + j)
-            cities_left -= pop[i][-j]
-        pop[i][-number_of_truck] = cities_left
+        for truck_number in range(number_of_truck - 1):
+            pop[i][truck_number - number_of_truck] = randint(1, cities_left - (number_of_truck - truck_number))
+            cities_left -= pop[i][truck_number - number_of_truck]
+        pop[i][-1] = cities_left
 
         # place the 3 biggest cities according to the constraint
         three_biggest = list(numpy.random.permutation(number_of_truck))
+
         offset = 0
         for truck_number in range(number_of_truck):
-            place = randint(0, pop[i][-(truck_number + 1)])
+            place = randint(0, pop[i][truck_number - number_of_truck] - 1)
             pop[i][place + offset] = three_biggest[truck_number]
-            offset += pop[i][-(truck_number + 1)]
+            offset += pop[i][truck_number - number_of_truck]
     return pop
+
+
+def is_biggest_county_constraints_verified(ind):
+    # print("\nTESTING :")
+    # print(str(ind))
+
+    constraints_verified = True
+    offset = 0
+    for truck_number in range(number_of_truck):
+        truck_passed_biggest = False
+        for county in range(ind[truck_number - number_of_truck]):
+            if ind[offset + county] in range(number_of_truck) and truck_passed_biggest:
+                constraints_verified = False
+            elif ind[offset + county] in range(number_of_truck) and not truck_passed_biggest:
+                truck_passed_biggest = True
+        offset += ind[truck_number - number_of_truck]
+
+    # print("TEST RESULT : " + str(constraints_verified) + "\n")
+    return constraints_verified
 
 
 # Format of a solution : list = [1, 2, 3, 4, ... , a, b, c, ...]
@@ -171,13 +191,13 @@ def crossover(mom, dad):
 
     return child
 
-    # Based on the construction of the first part of the Sister’s
-    # chromosome, calculate the number of assigned cities in the
-    # second part of the chromosome.
-
 
 if __name__ == '__main__':
-    mom1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 10, 5, 4]
-    dad1 = [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 2, 7, 10]
-    child1 = crossover(mom1, dad1)
-    print(child1)
+    # mom1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 10, 5, 4]
+    # dad1 = [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 2, 7, 10]
+    # child1 = crossover(mom1, dad1)
+    # print(child1)
+
+    population = genetic_generate_init()
+    for individual in population:
+        print(f"{individual} : {is_biggest_county_constraints_verified(individual)}")
