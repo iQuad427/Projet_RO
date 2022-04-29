@@ -1,4 +1,3 @@
-import one_truck
 from one_truck import *
 
 

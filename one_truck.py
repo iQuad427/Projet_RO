@@ -46,7 +46,7 @@ def import_matrix(csv_name):
     return matrix
 
 
-distance_matrix = import_matrix("matrix.csv")
+distance_matrix = import_matrix("resources/matrix.csv")
 
 
 # Generate a random initial population of counties with pop_size individuals
