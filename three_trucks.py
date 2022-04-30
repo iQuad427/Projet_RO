@@ -1,15 +1,18 @@
 from random import randint
+import matplotlib.pyplot as plt
 import numpy
 
 """Parameters"""
 # Population size
-pop_size = 100
+pop_size = 2500
 # Number of counties
-number_of_county = 19
+number_of_counties = 19
 # Number of salesmen
 number_of_truck = 3
 # Number of iterations to run the algorithm
-it = 11
+it = 15
+# Trying multiple times on the same weight
+tries_on_same_weight = 10
 # Distance between two tested weights
 precision_of_pareto = 10
 # Number of breeds at each iteration
@@ -24,8 +27,27 @@ population_cities = [179797, 131547, 118920, 96501, 86675, 82742,
                      33970, 27097, 25195, 25172, 24817, 21961]
 # Each person pays 0.70 € per month in cash that needs to be collected
 money_cities = [element * 0.7 for element in population_cities]
+# Total amount in the system for checking the money constraint
+money_total = sum(money_cities)
+# Distance list between National Bank and Counties
+dist_to_bank = [1.0, 3.0, 3.0, 2.5, 3.6, 7.0, 5.9, 6.0, 5.8, 3.7, 4.1, 5.7, 5.3, 7.0, 1.6, 7.3, 9.1, 7.0, 4.7]
 
 """Functions"""
+
+
+# We want 6 children, we need 4 parents, because :
+# Parent 1 breed 3 times (with 2, 3 and 4),
+# Parent 2 breed 2 more times (with 3 and 4),
+# Parent 3 breed 1 more time (only with 4),
+# Parent 4 breed 0 more times
+def how_many_parents(number_of_children):
+    number_of_children_left = number_of_children
+    iteration_number = 1
+    while number_of_children_left > 0:
+        number_of_children_left -= iteration_number
+        iteration_number += 1
+
+    return iteration_number  # number of parents needed to breed number_of_children times
 
 
 def import_matrix(csv_name):
@@ -55,9 +77,9 @@ def genetic_generate_init():
         pop.append([5] * (number_of_county + number_of_truck))
         cities_left = number_of_county
         for truck_number in range(number_of_truck - 1):
-            pop[i][truck_number - number_of_truck] = randint(1, cities_left - (number_of_truck - truck_number))
-            cities_left -= pop[i][truck_number - number_of_truck]
-        pop[i][-1] = cities_left
+            ind[truck_number - number_of_truck] = randint(1, cities_left - (number_of_truck - truck_number))
+            cities_left -= ind[truck_number - number_of_truck]
+        ind[-1] = cities_left
 
         # place the 3 biggest cities according to the constraint
         three_biggest = list(numpy.random.permutation(number_of_truck))
@@ -68,6 +90,7 @@ def genetic_generate_init():
             pop[i][place + offset] = three_biggest[truck_number]
             offset += pop[i][truck_number - number_of_truck]
     return pop
+
 
 
 def is_biggest_county_constraints_verified(ind):
@@ -102,8 +125,8 @@ def crossover(mom, dad):
     :param dad:
     :return: two children
     """
-    print(f"mom : {mom}")
-    print(f"dad : {dad}")
+    # print(f"mom : {mom}")
+    # print(f"dad : {dad}")
     total_unsaved_genes = 19
     total_saved_genes = 0
 
@@ -112,7 +135,7 @@ def crossover(mom, dad):
 
     child_parts = []
 
-    print("\n FIRST STEP : KEEP FROM MOM \n")
+    # print("\n FIRST STEP : KEEP FROM MOM \n")
 
     for truck_number in range(number_of_truck):
         new_child = []
@@ -120,14 +143,14 @@ def crossover(mom, dad):
         assigned_county = mom[truck_number - number_of_truck]  # value in second part of gene
         segment_size = randint(0, assigned_county - 1)  # size of the segment we retrieve
 
-        print(f"number of county assigned to truck number {truck_number} : {assigned_county}")
-        print(f"segment size : {segment_size}")
+        # print(f"number of county assigned to truck number {truck_number} : {assigned_county}")
+        # print(f"segment size : {segment_size}")
 
         starting_position = 0
         if assigned_county > segment_size:
             starting_position = randint(0, assigned_county - segment_size - 1)
 
-        print(f"starting position : {starting_position}")
+        # print(f"starting position : {starting_position}")
 
         for index in range(segment_size):
             offset = 0  # offset to the index of the first county visited by the truck
@@ -139,19 +162,19 @@ def crossover(mom, dad):
             saved_genes.append(mom[offset + starting_position + index])
 
         total_saved_genes = total_saved_genes + segment_size
-        print(f"new_child : {new_child}")
+        # print(f"new_child : {new_child}")
         child_parts.append(new_child)
-        print(f"child_parts : {child_parts}")
+        # print(f"child_parts : {child_parts}")
 
-    total_unsaved_genes = number_of_county - total_saved_genes
+    total_unsaved_genes = number_of_counties - total_saved_genes
 
-    print("\n SECOND STEP : COMPLETE FROM DAD \n")
+    # print("\n SECOND STEP : COMPLETE FROM DAD \n")
 
-    for i in range(number_of_county):
+    for i in range(number_of_counties):
         if dad[i] not in saved_genes:
             unsaved_genes.append(dad[i])
 
-    print(f"unsaved genes : {unsaved_genes}")
+    # print(f"unsaved genes : {unsaved_genes}")
 
     index = 0
     for truck_number in range(number_of_truck):
@@ -162,8 +185,8 @@ def crossover(mom, dad):
             if total_unsaved_genes != 0:
                 number_to_save = randint(1, total_unsaved_genes)
 
-        print(f"truck number : {truck_number}")
-        print(f"number to save : {number_to_save}")
+        # print(f"truck number : {truck_number}")
+        # print(f"number to save : {number_to_save}")
 
         # According to the order of the unsaved genes in the first
         # part of Dad’s chromosome, add the randomly generated
@@ -173,12 +196,12 @@ def crossover(mom, dad):
             total_unsaved_genes -= 1
             index += 1
 
-        print(f"completed list : {child_parts}")
+        # print(f"completed list : {child_parts}")
 
-    print("\n THIRD STEP : CREATE CHILD \n")
-    print(child_parts)
+    # print("\n THIRD STEP : CREATE CHILD \n")
+    # print(child_parts)
 
-    child = [0] * (number_of_county + number_of_truck)
+    child = [0] * (number_of_counties + number_of_truck)
     index = 0
     for truck_number in range(len(child_parts)):
         assigned_county = len(child_parts[truck_number])
@@ -193,11 +216,12 @@ def crossover(mom, dad):
 
 
 if __name__ == '__main__':
-    # mom1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 10, 5, 4]
-    # dad1 = [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 2, 7, 10]
+    # mom1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 5, 4, 10]
+    # dad1 = [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 9, 7, 3]
     # child1 = crossover(mom1, dad1)
     # print(child1)
 
-    population = genetic_generate_init()
-    for individual in population:
-        print(f"{individual} : {is_biggest_county_constraints_verified(individual)}")
+    x, y, results = simulate_mtsp()
+    save_csv(results, f"results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{precision_of_pareto}prec_{round(children_fraction_in_population*100)}child.csv")
+    plot(x, y)
+
