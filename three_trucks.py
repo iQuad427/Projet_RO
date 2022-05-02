@@ -4,7 +4,7 @@ import numpy
 
 """Parameters"""
 # Population size
-pop_size = 2500
+pop_size = 10
 # Number of counties
 number_of_counties = 19
 # Number of salesmen
@@ -12,9 +12,9 @@ number_of_truck = 3
 # Number of iterations to run the algorithm
 it = 15
 # Trying multiple times on the same weight
-tries_on_same_weight = 10
+tries_on_same_weight = 3
 # Distance between two tested weights
-precision_of_pareto = 10
+precision_of_pareto = 1000
 # Number of breeds at each iteration
 children_fraction_in_population = 0.75
 amount_of_children = round(children_fraction_in_population * pop_size)
@@ -108,7 +108,6 @@ def is_biggest_county_constraints_verified(ind):
                 truck_passed_biggest = True
         offset += ind[truck_number - number_of_truck]
 
-    # print("TEST RESULT : " + str(constraints_verified) + "\n")
     return constraints_verified
 
 
