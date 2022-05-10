@@ -4,7 +4,7 @@ import numpy
 
 """Parameters"""
 # Population size
-pop_size = 10
+pop_size = 1000
 # Number of counties
 number_of_counties = 19
 # Number of salesmen
@@ -12,11 +12,11 @@ number_of_truck = 3
 # Number of iterations to run the algorithm
 it = 15
 # Trying multiple times on the same weight
-tries_on_same_weight = 3
+tries_on_same_weight = 5
 # Distance between two tested weights
-precision_of_pareto = 1000
+precision_of_pareto = 25
 # Number of breeds at each iteration
-children_fraction_in_population = 0.75
+children_fraction_in_population = 0.90
 amount_of_children = round(children_fraction_in_population * pop_size)
 
 """ Variables """
@@ -221,6 +221,11 @@ if __name__ == '__main__':
     # print(child1)
 
     x, y, results = simulate_mtsp()
-    save_csv(results, f"results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{precision_of_pareto}prec_{round(children_fraction_in_population*100)}child.csv")
-    plot(x, y)
+
+    file_name = f"results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{precision_of_pareto}prec_{round(children_fraction_in_population * 100)}child.csv"
+    i = 0
+    while not exists(file_name):
+        i += 1
+
+    save_csv(results, file_name + "_" + str(i))
 

@@ -1,16 +1,20 @@
 import numpy
 import random
+import csv
 import matplotlib.pyplot as plt
+from os.path import exists
 
 ''' Parameters '''
 # Population size
-pop_size = 10000
+pop_size = 20000
 # Number of counties
 county_number = 19
 # Number of iterations to run the algorithm
 it = 11
 # Distance between two tested weights
-precision_of_pareto = 50
+precision_of_pareto = 20
+#
+tries = 3
 # Number of breeds at each iteration
 children_fraction_in_population = 0.75
 amount_of_children = round(children_fraction_in_population * pop_size)
@@ -171,6 +175,18 @@ def filter_value(x, y):
     return x_pareto, y_pareto
 
 
+def save_csv(solutions, file_name: str):
+    """
+    Saves the solution as a csv file with each possible solution on the pareto optimal curve on a separate row
+    :param solutions: the list of solutions returned by simulate_mtsp
+    :param file_name: the name of the csv file
+    """
+    with open(file_name, 'w') as csv_file:
+        for solution in solutions:
+            writer = csv.writer(csv_file)
+            writer.writerow(solution)
+
+
 if __name__ == '__main__':
     distance_matrix = import_matrix("resources/matrix.csv")
     # print(distance_matrix)
@@ -178,7 +194,7 @@ if __name__ == '__main__':
     results_scores = []
 
     for alpha in range(0, precision_of_pareto + 1):
-        for x in range(10):
+        for x in range(tries):
             weight = alpha / precision_of_pareto
             population = genetic_generate_init()
             print("Iteration (alpha) : " + str(alpha) + ", sub-iteration : " + str(x) + ", weight = " + str(weight))
@@ -196,6 +212,14 @@ if __name__ == '__main__':
     x_p, y_p = filter_value(x_val, y_val)
     plt.plot(x_p, y_p, 'or')
     plt.show()
+
+    file_name = f"results/{pop_size}pop_{county_number}_{it}it_{tries}try_{precision_of_pareto}prec_{round(children_fraction_in_population * 100)}child.csv"
+    i = 0
+    while not exists(file_name):
+        i += 1
+
+    save_csv(results_ind, file_name + "_" + str(i))
+
 
 '''
     population = genetic_generate_init()
