@@ -1,23 +1,28 @@
 from random import randint
 import matplotlib.pyplot as plt
 import numpy
+import csv
 
 """Parameters"""
 # Population size
-pop_size = 1000
+pop_size = 5000
 # Number of counties
 number_of_counties = 19
 # Number of salesmen
 number_of_truck = 3
 # Number of iterations to run the algorithm
-it = 15
+it = 10
 # Trying multiple times on the same weight
-tries_on_same_weight = 5
+tries_on_same_weight = 3
 # Distance between two tested weights
-precision_of_pareto = 25
+precision_of_pareto = 50
 # Number of breeds at each iteration
-children_fraction_in_population = 0.90
+children_fraction_in_population = 0.5
 amount_of_children = round(children_fraction_in_population * pop_size)
+# Mutation chance (from 0 to mut)
+mut = 20
+# Large number
+INFINITY = 100000000
 
 """ Variables """
 # Based on data from the domestic federal public service of Belgium
@@ -73,30 +78,51 @@ def genetic_generate_init():
     :return: the whole population as a matrix (list of lists)
     """
     pop = []
-    for i in range(pop_size):
-        pop.append([5] * (number_of_county + number_of_truck))
-        cities_left = number_of_county
+    while len(pop) < pop_size:
+        ind = [-1] * (number_of_counties + number_of_truck)
+        cities_left = number_of_counties
         for truck_number in range(number_of_truck - 1):
             ind[truck_number - number_of_truck] = randint(1, cities_left - (number_of_truck - truck_number))
             cities_left -= ind[truck_number - number_of_truck]
         ind[-1] = cities_left
 
-        # place the 3 biggest cities according to the constraint
+        # Place the biggest cities according to the constraint
         three_biggest = list(numpy.random.permutation(number_of_truck))
-
         offset = 0
         for truck_number in range(number_of_truck):
-            place = randint(0, pop[i][truck_number - number_of_truck] - 1)
-            pop[i][place + offset] = three_biggest[truck_number]
-            offset += pop[i][truck_number - number_of_truck]
+            place = randint(0, ind[truck_number - number_of_truck] - 1)
+            ind[place + offset] = three_biggest[truck_number]
+            offset += ind[truck_number - number_of_truck]
+
+        # Place the other cities randomly
+        others = list(numpy.random.permutation(number_of_counties - number_of_truck))
+        for j in range(number_of_counties):
+            if ind[j] < 0:
+                ind[j] = others.pop() + number_of_truck
+
+        if is_biggest_county_constraints_verified(ind) and is_half_amount_constraints_verified(ind):
+            pop.append(ind)
+
     return pop
 
 
+def calculate_weight_constant(pop: list) -> float:
+    sum_weight = 0
+    sum_distance = 0
+    for ind in pop:
+        sum_weight += find_weighted_dist(ind)
+        sum_distance += find_total_dist(ind)
+
+    return (sum_weight / pop_size) / (sum_distance / pop_size)
+
 
 def is_biggest_county_constraints_verified(ind):
-    # print("\nTESTING :")
-    # print(str(ind))
-
+    """
+    This function tests if an individual satisfies the constraint that the main cities are each visited by a
+    different truck
+    :param ind: The individual to be tested
+    :return: True if the constraint is satisfied, False if not
+    """
     constraints_verified = True
     offset = 0
     for truck_number in range(number_of_truck):
@@ -111,9 +137,23 @@ def is_biggest_county_constraints_verified(ind):
     return constraints_verified
 
 
-# Format of a solution : list = [1, 2, 3, 4, ... , a, b, c, ...]
-#                                cities            salesmen
-# with a, b, c the number of cities visited by each salesman
+def is_half_amount_constraints_verified(ind):
+    """
+    This function verifies if an individual satisfies the constraint that it can't transport more than half of the total
+    amount at once
+    :param ind: The individual to be tested
+    :return: True if the constraint is satisfied, False if not
+    """
+    constraint_verified = True
+    offset = 0
+    for truck_number in range(number_of_truck):
+        total_money = 0
+        for i in ind[offset:offset + ind[truck_number - number_of_truck] - 1]:
+            total_money += money_cities[i]
+        if total_money > 0.5 * money_total:
+            constraint_verified = False
+        offset += ind[truck_number - number_of_truck]
+    return constraint_verified
 
 
 def crossover(mom, dad):
@@ -214,18 +254,215 @@ def crossover(mom, dad):
     return child
 
 
+def mutate(ind: list):
+    """
+    Mutates an individual with a random chance by switching two cities and two numbers from the trucks
+    :param ind: The individual to mutate
+    """
+    ind_backup = ind.copy()
+    if randint(0, mut) == 0:
+        # switch two numbers from the "cities" section
+        pos1 = randint(0, number_of_counties - 1)
+        pos2 = randint(0, number_of_counties - 1)
+        ind[pos1], ind[pos2] = ind[pos2], ind[pos1]
+        # Switch two numbers from the "trucks" section
+        pos3 = randint(0, number_of_truck - 1)
+        pos4 = randint(0, number_of_truck - 1)
+        ind[number_of_counties + pos3], ind[number_of_counties + pos4] = \
+            ind[number_of_counties + pos4], ind[number_of_counties + pos3]
+    if not is_half_amount_constraints_verified(ind) or not is_biggest_county_constraints_verified(ind):
+        ind = ind_backup.copy()
+
+    return ind
+
+
+# Returns the total distance travelled for the individual
+def find_total_dist(ind):
+    dist = 0
+    offset = 0
+    for truck_number in range(number_of_truck):
+        assigned_county = ind[truck_number - number_of_truck]
+
+        dist += dist_to_bank[offset]  # Start from the Bank
+        dist += dist_to_bank[offset + assigned_county - 1]  # End at the Bank
+        for i in range(assigned_county - 1):
+            dist += distance_matrix[max(ind[i], ind[i + 1])][min(ind[i], ind[i + 1])]
+
+        offset += assigned_county
+
+    return dist
+
+
+# Returns the distance travelled for the individual weighted by the amount of money carried
+def find_weighted_dist(ind):
+    w_dist = 0
+    carry = 0
+    offset = 0
+    for truck_number in range(number_of_truck):
+        assigned_county = ind[truck_number - number_of_truck]
+
+        for i in range(assigned_county - 1):
+            carry += money_cities[ind[i]]
+            w_dist += distance_matrix[max(ind[i], ind[i + 1])][min(ind[i], ind[i + 1])] * carry
+        w_dist += dist_to_bank[offset + assigned_county - 1] * carry  # End at the Bank
+
+        offset += assigned_county
+
+    return w_dist
+
+
+def score(ind: list, weight: float, weight_balance_cst: float):
+    """
+    Calculates the fitness of an individual
+    :param ind: The individual
+    :param weight: A number between 0 and 1 describing how much of each criterion we want to prioritize
+    :param weight_balance_cst: A constant to balance the impact of both criteria in the calculation
+    :return: The score
+    """
+    return weight * find_weighted_dist(ind) + (1 - weight) * find_total_dist(ind) * weight_balance_cst
+
+
+def sorted_population_score(pop: list, weight: float, weight_balance: float):
+    """
+    :param pop: population to determine the score of
+    :param weight: importance of criteria 1 against criteria 2 (in [0,1])
+    :param weight_balance: A constant to balance the impact of both criteria in the calculation
+    :return: a list of tuples (individual, score) sorted by score in descending order
+    """
+    list_score = []
+
+    for ind in pop:
+        list_score.append((ind, score(ind, weight, weight_balance)))
+
+    return sorted(list_score, key=lambda x: x[-1], reverse=False)
+
+
+def breed(list_score, n_parents):
+    """
+
+    :param list_score:
+    :param n_parents:
+    :return:
+    """
+    new_population = []
+
+    # Add the parents to the new population
+    for parent_index in range(n_parents):
+        new_population.append(list_score[parent_index][0])
+        # Crossover the parents
+        for ind_index in range(parent_index, n_parents):
+            for i in range(2):  # Add Sister and Brother
+                if len(new_population) < pop_size:
+                    child = crossover(list_score[parent_index][0], list_score[ind_index][0])
+                    while not is_half_amount_constraints_verified(child) or \
+                            not is_biggest_county_constraints_verified(child):
+                        child = crossover(list_score[parent_index][0], list_score[ind_index][0])
+
+                    new_population.append(child)
+
+    if len(new_population) < pop_size:
+        for relative_ind_index in range(pop_size - len(new_population)):
+            new_population.append(mutate(list_score[n_parents + relative_ind_index][0]))
+
+    for index in range(pop_size):
+        new_population[index] = mutate(new_population[index])
+    return new_population
+
+
+def filter_pareto(x, y):
+    """
+    Filter the outputs to get a pareto optimal curve
+    :param x: The distances
+    :param y: The weighted distances
+    :return: Filtered lists for the abscissa and ordinate of the graph
+    """
+    x_pareto = []
+    y_pareto = []
+
+    for i in range(len(x)):
+        opt = True
+        for j in range(len(x)):
+            if x[j] < x[i] and y[j] < y[i]:
+                opt = False
+        if opt:
+            x_pareto.append(x[i])
+            y_pareto.append(y[i])
+
+    return x_pareto, y_pareto
+
+
+def simulate_one_weight(weight: float):
+    results_ind = []
+    results_scores = []
+
+    for tries in range(tries_on_same_weight):
+        population = genetic_generate_init()
+        weight_constant = calculate_weight_constant(population)
+        number_of_parents = how_many_parents(amount_of_children)
+        print("Iteration : " + str(tries) + ", Weight = " + str(weight))
+        res = [[[INFINITY]]]
+        for i in range(it):
+            population = breed(sorted_population_score(population, weight, weight_constant), number_of_parents)
+            res = sorted_population_score(population, weight, weight_constant)
+            # print("New Score : " + str(res[0][1]))
+
+        results_ind.append(res[0][0])
+        print("score : " + str(score(res[0][0], weight, weight_constant)))
+        results_scores.append([find_total_dist(results_ind[-1]), find_weighted_dist(results_ind[-1])])
+
+    x_val = [lst[0] for lst in results_scores]
+    y_val = [lst[1] for lst in results_scores]
+    return x_val, y_val, results_ind
+
+
+def simulate_mtsp():
+    results_ind = []
+    results_scores = []
+
+    for alpha in range(0, precision_of_pareto + 1):
+        for x in range(tries_on_same_weight):
+            weight = alpha / precision_of_pareto
+            population = genetic_generate_init()
+            weight_constant = calculate_weight_constant(population)
+            number_of_parents = how_many_parents(amount_of_children)
+            print("Iteration (alpha) : " + str(alpha) + ", sub-iteration : " + str(x) + ", weight = " + str(weight))
+            res = [[[INFINITY]]]
+            for i in range(it):
+                population = breed(sorted_population_score(population, weight, weight_constant), number_of_parents)
+                res = sorted_population_score(population, weight, weight_constant)
+                # print("New Score : " + str(res[0][1]))
+
+            results_ind.append(res[0][0])
+            print("score : " + str(score(res[0][0], weight, weight_constant)))
+            results_scores.append([find_total_dist(results_ind[-1]), find_weighted_dist(results_ind[-1])])
+
+    x_val = [lst[0] for lst in results_scores]
+    y_val = [lst[1] for lst in results_scores]
+    return x_val, y_val, results_ind
+
+
+def plot(x_in, y_in):
+    """
+    Plot the pareto optimal curve
+    """
+    x_p, y_p = filter_pareto(x_in, y_in)
+    plt.plot(x_p, y_p, 'or')
+    plt.show()
+
+
+def save_csv(solutions, file_name: str):
+    """
+    Saves the solution as a csv file with each possible solution on the pareto optimal curve on a separate row
+    :param solutions: the list of solutions returned by simulate_mtsp
+    :param file_name: the name of the csv file
+    """
+    with open(file_name, 'w') as csv_file:
+        for solution in solutions:
+            writer = csv.writer(csv_file)
+            writer.writerow(solution)
+
+
 if __name__ == '__main__':
-    # mom1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 5, 4, 10]
-    # dad1 = [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 9, 7, 3]
-    # child1 = crossover(mom1, dad1)
-    # print(child1)
-
     x, y, results = simulate_mtsp()
-
-    file_name = f"results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{precision_of_pareto}prec_{round(children_fraction_in_population * 100)}child.csv"
-    i = 0
-    while not exists(file_name):
-        i += 1
-
-    save_csv(results, file_name + "_" + str(i))
-
+    file_name = f"../results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{precision_of_pareto}prec_{round(children_fraction_in_population * 100)}child.csv"
+    save_csv(results, file_name)
