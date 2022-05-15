@@ -11,9 +11,9 @@ number_of_counties = 19
 # Number of salesmen
 number_of_truck = 3
 # Number of iterations to run the algorithm
-it = 10
+it = 15
 # Trying multiple times on the same weight
-tries_on_same_weight = 3
+tries_on_same_weight = 2
 # Distance between two tested weights
 precision_of_pareto = 50
 # Number of breeds at each iteration
@@ -106,14 +106,22 @@ def genetic_generate_init():
     return pop
 
 
-def calculate_weight_constant(pop: list) -> float:
+def make_list_from_csv(path: str):
+    with open(path) as file:
+        data = [list(map(int, rec)) for rec in csv.reader(file)]
+
+    return data
+
+
+def calculate_weight_constant() -> float:
+    best_pop = make_list_from_csv("results/To Keep/Three/all_data_filtered")
     sum_weight = 0
     sum_distance = 0
-    for ind in pop:
+    for ind in best_pop:
         sum_weight += find_weighted_dist(ind)
         sum_distance += find_total_dist(ind)
 
-    return (sum_weight / pop_size) / (sum_distance / pop_size)
+    return sum_weight / sum_distance
 
 
 def is_biggest_county_constraints_verified(ind):
@@ -418,12 +426,12 @@ def simulate_one_weight(weight: float):
 def simulate_mtsp():
     results_ind = []
     results_scores = []
+    weight_constant = calculate_weight_constant()
 
     for alpha in range(0, precision_of_pareto + 1):
         for x in range(tries_on_same_weight):
             weight = alpha / precision_of_pareto
             population = genetic_generate_init()
-            weight_constant = calculate_weight_constant(population)
             number_of_parents = how_many_parents(amount_of_children)
             print("Iteration (alpha) : " + str(alpha) + ", sub-iteration : " + str(x) + ", weight = " + str(weight))
             res = [[[INFINITY]]]
@@ -464,5 +472,5 @@ def save_csv(solutions, file_name: str):
 
 if __name__ == '__main__':
     x, y, results = simulate_mtsp()
-    file_name = f"../results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{precision_of_pareto}prec_{round(children_fraction_in_population * 100)}child.csv"
+    file_name = f"results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{precision_of_pareto}prec_{round(children_fraction_in_population * 100)}child.csv"
     save_csv(results, file_name)

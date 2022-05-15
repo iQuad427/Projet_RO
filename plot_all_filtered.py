@@ -44,4 +44,6 @@ if __name__ == '__main__':
     print_not_optimal()
     print_all_three_trucks()
 
+    plt.xlabel("distance")
+    plt.ylabel("risk")
     plt.show()

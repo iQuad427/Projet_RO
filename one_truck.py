@@ -6,17 +6,17 @@ from os.path import exists
 
 ''' Parameters '''
 # Population size
-pop_size = 20000
+pop_size = 10000
 # Number of counties
 county_number = 19
 # Number of iterations to run the algorithm
-it = 11
+it = 30
 # Distance between two tested weights
 precision_of_pareto = 20
-#
+# Number of tries on the same weight
 tries = 3
 # Number of breeds at each iteration
-children_fraction_in_population = 0.75
+children_fraction_in_population = 1
 amount_of_children = round(children_fraction_in_population * pop_size)
 
 
@@ -120,7 +120,7 @@ def find_weighted_dist(individual):
 
 
 def score(individual, weight):
-    return weight * find_weighted_dist(individual) + (1 - weight) * find_total_dist(individual) * 440000
+    return weight * find_weighted_dist(individual) + (1 - weight) * find_total_dist(individual) * 475000
 
 
 def sorted_population_score(pop, weight):
@@ -166,7 +166,7 @@ def filter_value(x, y):
     for i in range(len(x)):
         opt = True
         for j in range(len(x)):
-            if x[j] > x[i] and y[j] > y[i]:
+            if x[j] < x[i] and y[j] < y[i]:
                 opt = False
         if opt:
             x_pareto.append(x[i])
