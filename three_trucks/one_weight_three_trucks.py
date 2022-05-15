@@ -1,4 +1,4 @@
-from three_trucks import *
+from three_trucks.three_trucks import *
 
 
 def simulate_one_weight(weight: float):

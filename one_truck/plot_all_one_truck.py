@@ -30,15 +30,30 @@ def score_solutions_one_truck(solutions: list):
 
 
 def print_all_one_truck():
-    path = 'results/To Keep/One/all_data'
+    path = '../results/To Keep/One/all_data_filtered'
     sol = make_list_from_csv(path)
 
     x_in, y_in = to_plot_one_truck(sol)
     x_p, y_p = one_truck.filter_value(x_in, y_in)
 
     plt.plot(x_p, y_p, 'or')
-    plt.show()
+
+
+def print_not_optimal():
+    path = '../results/To Keep/One/filtered_out'
+    sol = make_list_from_csv(path)
+
+    x_in, y_in = to_plot_one_truck(sol)
+
+    plt.plot(x_in, y_in, 'ob')
 
 
 if __name__ == '__main__':
+    print_not_optimal()
     print_all_one_truck()
+
+    plt.xlabel("distance")
+    plt.ylabel("risque")
+    plt.show()
+
+

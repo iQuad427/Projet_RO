@@ -10,11 +10,11 @@ pop_size = 10000
 # Number of counties
 county_number = 19
 # Number of iterations to run the algorithm
-it = 30
+it = 15
 # Distance between two tested weights
 precision_of_pareto = 20
 # Number of tries on the same weight
-tries = 3
+tries = 5
 # Number of breeds at each iteration
 children_fraction_in_population = 1
 amount_of_children = round(children_fraction_in_population * pop_size)
@@ -214,9 +214,6 @@ if __name__ == '__main__':
     plt.show()
 
     file_name = f"results/{pop_size}pop_{county_number}_{it}it_{tries}try_{precision_of_pareto}prec_{round(children_fraction_in_population * 100)}child.csv"
-    i = 0
-    while not exists(file_name):
-        i += 1
 
     save_csv(results_ind, file_name + "_" + str(i))
 

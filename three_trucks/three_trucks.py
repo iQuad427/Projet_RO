@@ -5,7 +5,7 @@ import csv
 
 """Parameters"""
 # Population size
-pop_size = 5000
+pop_size = 10000
 # Number of counties
 number_of_counties = 19
 # Number of salesmen
@@ -114,7 +114,7 @@ def make_list_from_csv(path: str):
 
 
 def calculate_weight_constant() -> float:
-    best_pop = make_list_from_csv("results/To Keep/Three/all_data_filtered")
+    best_pop = make_list_from_csv("../results/To Keep/Three/all_data_filtered")
     sum_weight = 0
     sum_distance = 0
     for ind in best_pop:
