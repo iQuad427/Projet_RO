@@ -1,8 +1,16 @@
+"""
+INFO-H3000 - Recherche opérationnelle
+Liam Fallik, Quentin Roels
+
+This script filters a csv files containing candidate solutions and keeps only the best ones (the pareto optimal curve)
+"""
+
 import csv
 import three_trucks
 
 
 def make_list_from_csv(path: str):
+    """Import the csv as a list of individuals"""
     with open(path) as file:
         data = [list(map(int, rec)) for rec in csv.reader(file)]
 
@@ -10,6 +18,7 @@ def make_list_from_csv(path: str):
 
 
 def score_solutions_three_trucks(solutions: list):
+    """Append the list of scores to each individual solution"""
     scores = []
     for solution in solutions:
         scores.append([solution, three_trucks.find_weighted_dist(solution), three_trucks.find_total_dist(solution)])
@@ -18,6 +27,7 @@ def score_solutions_three_trucks(solutions: list):
 
 
 def sort_pareto_three_trucks(solutions_scores: list):
+    """Separate the solutions"""
     optimal_solutions = []
     not_optimal_solutions = []
     for i in range(len(solutions_scores)):
