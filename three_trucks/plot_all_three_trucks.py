@@ -1,9 +1,17 @@
+"""
+INFO-H3000 - Recherche opérationnelle
+Liam Fallik, Quentin Roels
+
+This script plots all the solutions stored in a csv file and highlights the best ones (the pareto optimal curve) in red.
+"""
+
 import three_trucks
 import matplotlib.pyplot as plt
 import csv
 
 
 def make_list_from_csv(path: str):
+    """Import the csv as a list of individuals"""
     with open(path) as file:
         data = [list(map(int, rec)) for rec in csv.reader(file)]
 
@@ -11,6 +19,7 @@ def make_list_from_csv(path: str):
 
 
 def to_plot_three_trucks(solutions: list):
+    """Return the values to be plotted as the x and y axis of the points"""
     scores = []
     for solution in solutions:
         scores.append([three_trucks.find_weighted_dist(solution), three_trucks.find_total_dist(solution)])
@@ -22,6 +31,7 @@ def to_plot_three_trucks(solutions: list):
 
 
 def print_all_three_trucks():
+    """Plot the points belonging to the pareto optimal curve in red"""
     path = 'results/To Keep/Three/all_data_filtered'
     sol = make_list_from_csv(path)
 
@@ -32,6 +42,7 @@ def print_all_three_trucks():
 
 
 def print_not_optimal():
+    """Plot all of the points in another color"""
     path = 'results/To Keep/Three/filtered_out'
     sol = make_list_from_csv(path)
 

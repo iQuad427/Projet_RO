@@ -10,6 +10,7 @@ import three_trucks
 
 
 def make_list_from_csv(path: str):
+    """Import the csv as a list of individuals"""
     with open(path) as file:
         data = [list(map(int, rec)) for rec in csv.reader(file)]
 
@@ -17,6 +18,7 @@ def make_list_from_csv(path: str):
 
 
 def sorted_population_dist(pop):
+    """Sort the individuals by distance"""
     list_score = []
 
     for ind in pop:
