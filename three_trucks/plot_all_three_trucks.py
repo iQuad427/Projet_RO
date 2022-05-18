@@ -1,4 +1,4 @@
-from three_trucks import three_trucks
+import three_trucks
 import matplotlib.pyplot as plt
 import csv
 
@@ -22,7 +22,7 @@ def to_plot_three_trucks(solutions: list):
 
 
 def print_all_three_trucks():
-    path = '../results/To Keep/Three/all_data_filtered'
+    path = 'results/To Keep/Three/all_data_filtered'
     sol = make_list_from_csv(path)
 
     x_in, y_in = to_plot_three_trucks(sol)
@@ -32,7 +32,7 @@ def print_all_three_trucks():
 
 
 def print_not_optimal():
-    path = '../results/To Keep/Three/filtered_out'
+    path = 'results/To Keep/Three/filtered_out'
     sol = make_list_from_csv(path)
 
     x_in, y_in = to_plot_three_trucks(sol)
@@ -41,6 +41,8 @@ def print_not_optimal():
 
 
 if __name__ == '__main__':
+    three_trucks.distance_matrix = three_trucks.import_matrix("resources/matrix.csv")
+
     print_not_optimal()
     print_all_three_trucks()
 

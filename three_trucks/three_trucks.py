@@ -11,18 +11,21 @@ number_of_counties = 19
 # Number of salesmen
 number_of_truck = 3
 # Number of iterations to run the algorithm
-it = 15
+it = 12
 # Trying multiple times on the same weight
-tries_on_same_weight = 2
+tries_on_same_weight = 3
 # Distance between two tested weights
 precision_of_pareto = 50
 # Number of breeds at each iteration
-children_fraction_in_population = 0.5
+children_fraction_in_population = 0.9
 amount_of_children = round(children_fraction_in_population * pop_size)
 # Mutation chance (from 0 to mut)
 mut = 20
 # Large number
 INFINITY = 100000000
+# Distance matrix
+distance_matrix = []
+
 
 """ Variables """
 # Based on data from the domestic federal public service of Belgium
@@ -65,9 +68,6 @@ def import_matrix(csv_name):
     return matrix
 
 
-distance_matrix = import_matrix("resources/matrix.csv")
-
-
 def genetic_generate_init():
     """
     Generate a random initial population of counties with pop_size individuals according to Carter and Ragsdale's
@@ -81,17 +81,19 @@ def genetic_generate_init():
     while len(pop) < pop_size:
         ind = [-1] * (number_of_counties + number_of_truck)
         cities_left = number_of_counties
+
+        # Chose the number of cities visited by each truck of the individual
         for truck_number in range(number_of_truck - 1):
             ind[truck_number - number_of_truck] = randint(1, cities_left - (number_of_truck - truck_number))
             cities_left -= ind[truck_number - number_of_truck]
         ind[-1] = cities_left
 
         # Place the biggest cities according to the constraint
-        three_biggest = list(numpy.random.permutation(number_of_truck))
+        biggest_counties = list(numpy.random.permutation(number_of_truck))
         offset = 0
         for truck_number in range(number_of_truck):
             place = randint(0, ind[truck_number - number_of_truck] - 1)
-            ind[place + offset] = three_biggest[truck_number]
+            ind[place + offset] = biggest_counties[truck_number]
             offset += ind[truck_number - number_of_truck]
 
         # Place the other cities randomly
@@ -217,20 +219,35 @@ def crossover(mom, dad):
 
     # print("\n SECOND STEP : COMPLETE FROM DAD \n")
 
-    for i in range(number_of_counties):
-        if dad[i] not in saved_genes:
-            unsaved_genes.append(dad[i])
+    number_to_add_per_truck = []
+    offset = 0
+    for truck_number in range(number_of_truck):
+        number_to_add_in_truck = dad[truck_number - number_of_truck]
+        cities_to_add_to_truck = 0
+        for i in range(number_to_add_in_truck):
+            if dad[offset + i] not in saved_genes:
+                unsaved_genes.append(dad[offset + i])
+                cities_to_add_to_truck += 1
+
+        number_to_add_per_truck.append(cities_to_add_to_truck)
+        offset += number_to_add_in_truck
+
+    # for i in range(number_of_counties):
+    #     if dad[i] not in saved_genes:
+    #         unsaved_genes.append(dad[i])
 
     # print(f"unsaved genes : {unsaved_genes}")
 
     index = 0
     for truck_number in range(number_of_truck):
-        number_to_save = total_unsaved_genes
-        if truck_number != number_of_truck - 1:
-            # Randomly generate an integer number between 1
-            # and totalUnsavedGenes for salesman m to add genes
-            if total_unsaved_genes != 0:
-                number_to_save = randint(1, total_unsaved_genes)
+        # number_to_save = total_unsaved_genes
+        # if truck_number != number_of_truck - 1:
+        #     # Randomly generate an integer number between 1
+        #     # and totalUnsavedGenes for salesman m to add genes
+        #     if total_unsaved_genes != 0:
+        #         number_to_save = randint(1, total_unsaved_genes)
+
+        number_to_save = number_to_add_per_truck[truck_number]
 
         # print(f"truck number : {truck_number}")
         # print(f"number to save : {number_to_save}")
@@ -405,7 +422,7 @@ def simulate_one_weight(weight: float):
 
     for tries in range(tries_on_same_weight):
         population = genetic_generate_init()
-        weight_constant = calculate_weight_constant(population)
+        weight_constant = calculate_weight_constant()
         number_of_parents = how_many_parents(amount_of_children)
         print("Iteration : " + str(tries) + ", Weight = " + str(weight))
         res = [[[INFINITY]]]
@@ -471,6 +488,7 @@ def save_csv(solutions, file_name: str):
 
 
 if __name__ == '__main__':
+    distance_matrix = import_matrix("../resources/matrix.csv")
     x, y, results = simulate_mtsp()
-    file_name = f"results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{precision_of_pareto}prec_{round(children_fraction_in_population * 100)}child.csv"
+    file_name = f"../results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{precision_of_pareto}prec_{round(children_fraction_in_population * 100)}child.csv"
     save_csv(results, file_name)

@@ -1,5 +1,5 @@
 import csv
-from three_trucks import three_trucks
+import three_trucks
 
 
 def make_list_from_csv(path: str):
@@ -34,8 +34,10 @@ def sort_pareto_three_trucks(solutions_scores: list):
 
 
 if __name__ == '__main__':
+    three_trucks.distance_matrix = three_trucks.import_matrix("../resources/matrix.csv")
+
     data = make_list_from_csv("../results/To Keep/Three/all_data")
     data, bad_data = sort_pareto_three_trucks(score_solutions_three_trucks(data))
 
-    three_trucks.save_csv(data, "results/To Keep/Three/all_data_filtered")
-    three_trucks.save_csv(bad_data, "results/To Keep/Three/filtered_out")
+    three_trucks.save_csv(data, "../results/To Keep/Three/all_data_filtered")
+    three_trucks.save_csv(bad_data, "../results/To Keep/Three/filtered_out")
