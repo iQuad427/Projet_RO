@@ -5,8 +5,8 @@ Liam Fallik, Quentin Roels
 This script is the main script of the project. It calculates the optimal route for m trucks going in n cities with
 m and n as parameters.
 The output of this script is a plot and an ordered list of cities (see report for more information)
-
 """
+
 from random import randint
 import matplotlib.pyplot as plt
 import numpy

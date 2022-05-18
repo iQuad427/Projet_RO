@@ -1,3 +1,10 @@
+"""
+INFO-H3000 - Recherche opérationnelle
+Liam Fallik, Quentin Roels
+
+This script sorts an input csv of answers to the problem by distance
+"""
+
 import csv
 import three_trucks
 
