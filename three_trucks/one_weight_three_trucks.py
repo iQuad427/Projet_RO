@@ -1,9 +1,17 @@
+"""
+INFO-H3000 - Recherche opérationnelle
+Liam Fallik, Quentin Roels
+
+This script solves the problem for a single weight only, this is used to discuss the influence of the different
+parameters on the result.
+"""
+
 from three_trucks.three_trucks import *
 
 
 def simulate_one_weight(weight: float):
-    results_ind = []
-    results_scores = []
+    results_ind = []  # A list of the best individuals
+    results_scores = []  # The scores of the best individuals
 
     for tries in range(tries_on_same_weight):
         population = genetic_generate_init()
