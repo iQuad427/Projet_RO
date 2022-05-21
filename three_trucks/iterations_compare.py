@@ -1,10 +1,11 @@
-from one_truck import *
+from three_trucks import *
+import three_trucks
 
 if __name__ == '__main__':
     """ Has the objective to show the diminution of score over iterations, letting us
     decide how many iterations are optimal to reduce overall computing time """
 
-    distance_matrix = import_matrix("resources/matrix.csv")
+    three_trucks.distance_matrix = import_matrix("../resources/matrix.csv")
 
     for x in range(5):
         results_ind = []
@@ -14,17 +15,18 @@ if __name__ == '__main__':
 
         weight = 0.5
         population = genetic_generate_init()
+        weight_cst = calculate_weight_constant()
 
         for i in range(it):
-            sorted = sorted_population_score(population, weight)
-            population = breed(sorted)
-            res = sorted_population_score(population, weight)
+            sorted_list = sorted_population_score(population, weight, weight_cst)
+            population = breed(sorted_list, how_many_parents(amount_of_children))
+            res = sorted_population_score(population, weight, weight_cst)
             results_ind.append(res[0][0])
 
             x_val.append(i)
-            y_val.append(score(results_ind[-1], weight))
+            y_val.append(score(results_ind[-1], weight, weight_cst))
 
-            results_scores.append(score(results_ind[-1], weight))
+            results_scores.append(score(results_ind[-1], weight, weight_cst))
             print(results_scores[-1])
 
         print("Weighted distance :  " + str(find_weighted_dist(results_ind[-1])))

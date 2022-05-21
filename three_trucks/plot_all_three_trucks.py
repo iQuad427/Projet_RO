@@ -48,14 +48,16 @@ def print_not_optimal():
 
     x_in, y_in = to_plot_three_trucks(sol)
 
-    plt.plot(x_in, y_in, 'ob')
+    plt.figure(dpi=400)
+    plt.plot(x_in, y_in, 'o', color='grey')
 
 
 if __name__ == '__main__':
     three_trucks.distance_matrix = three_trucks.import_matrix("resources/matrix.csv")
 
-    print_not_optimal()
-    print_all_three_trucks()
+    # print_not_optimal()
+    # print_all_three_trucks()
+    # plt.plot(53.1, 14591963.54, 'o', color='#78BE21')
 
     plt.xlabel("distance")
     plt.ylabel("risk")

@@ -14,17 +14,17 @@ import csv
 
 """ Parameters """
 # Population size
-pop_size = 10000
+pop_size = 15000
 # Number of counties
 number_of_counties = 19
 # Number of salesmen
 number_of_truck = 3
 # Number of iterations to run the algorithm
-it = 12
+it = 10
 # Trying multiple times on the same weight
-tries_on_same_weight = 3
+tries_on_same_weight = 20
 # Distance between two tested weights
-precision_of_pareto = 50
+precision_of_pareto = 100
 # Number of breeds at each iteration
 children_fraction_in_population = 0.9
 amount_of_children = round(children_fraction_in_population * pop_size)
@@ -66,9 +66,9 @@ def how_many_parents(number_of_children):
     :return: the number of parents
     """
     number_of_children_left = number_of_children
-    number_of_parents = 1
+    number_of_parents = 2
     while number_of_children_left > 0:
-        number_of_children_left -= number_of_parents
+        number_of_children_left -= number_of_parents - 1
         number_of_parents += 1
 
     return number_of_parents
@@ -147,13 +147,14 @@ def calculate_weight_constant() -> float:
     the latter is much bigger than the first
     @return: The weight
     """
-    best_pop = make_list_from_csv("../results/To Keep/Three/all_data_filtered")
+    best_pop = make_list_from_csv("../results/To Keep/New/all_data_filtered")
     sum_weight = 0
     sum_distance = 0
     for ind in best_pop:
         sum_weight += find_weighted_dist(ind)
         sum_distance += find_total_dist(ind)
 
+    print("Weight factor : " + str(sum_weight/sum_distance))
     return sum_weight / sum_distance
 
 
@@ -315,10 +316,10 @@ def find_total_dist(ind):
     for truck_number in range(number_of_truck):
         assigned_county = ind[truck_number - number_of_truck]
 
-        dist += dist_to_bank[offset]  # Start from the Bank
-        dist += dist_to_bank[offset + assigned_county - 1]  # End at the Bank
+        dist += dist_to_bank[ind[offset]]  # Start from the Bank
+        dist += dist_to_bank[ind[offset + assigned_county - 1]]  # End at the Bank
         for i in range(assigned_county - 1):
-            dist += distance_matrix[max(ind[i], ind[i + 1])][min(ind[i], ind[i + 1])]
+            dist += distance_matrix[max(ind[offset + i], ind[offset + i + 1])][min(ind[offset + i], ind[offset + i + 1])]
 
         offset += assigned_county
 
@@ -341,9 +342,9 @@ def find_weighted_dist(ind):
         assigned_county = ind[truck_number - number_of_truck]
 
         for i in range(assigned_county - 1):
-            carry += money_cities[ind[i]]
-            w_dist += distance_matrix[max(ind[i], ind[i + 1])][min(ind[i], ind[i + 1])] * carry
-        w_dist += dist_to_bank[offset + assigned_county - 1] * carry  # End at the Bank
+            carry += money_cities[ind[offset + i]]
+            w_dist += distance_matrix[max(ind[offset + i], ind[offset + i + 1])][min(ind[offset + i], ind[offset + i + 1])] * carry
+        w_dist += dist_to_bank[ind[offset + assigned_county - 1]] * carry  # End at the Bank
 
         offset += assigned_county
 
@@ -394,7 +395,7 @@ def breed(list_score, n_parents):
         # Crossover the parents
         for ind_index in range(parent_index, n_parents):
             for i in range(2):  # Add Sister and Brother
-                if len(new_population) < pop_size:
+                if len(new_population) < amount_of_children:
                     child = crossover(list_score[parent_index][0], list_score[ind_index][0])
                     while not is_half_amount_constraints_verified(child) or \
                             not is_biggest_county_constraint_verified(child):
@@ -486,7 +487,10 @@ def simulate_mtsp():
 
             # Append the best individual to the results
             results_ind.append(res[0][0])
-            print("score : " + str(score(res[0][0], weight, weight_constant)))
+            print("score :      " + str(score(res[0][0], weight, weight_constant)))
+            print("distance :   " + str(find_total_dist(res[0][0])))
+            print("risk :       " + str(find_weighted_dist(res[0][0])))
+            print("individual : " + str(res[0][0]))
             results_scores.append([find_total_dist(results_ind[-1]), find_weighted_dist(results_ind[-1])])
 
     # Get the list of distances and weighted distances of the best individuals on every weight
@@ -516,7 +520,7 @@ def save_csv(solutions, file_name: str):
             writer.writerow(solution)
 
 
-# Main method (run this with the desired parameters at the beginning of this script and the correct path for the input
+# Main method, run this with the desired parameters at the beginning of this script and the correct path for the input
 # matrix.
 if __name__ == '__main__':
     distance_matrix = import_matrix("../resources/matrix.csv")
