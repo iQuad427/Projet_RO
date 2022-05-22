@@ -49,6 +49,10 @@ def sort_pareto_three_trucks(solutions_scores: list):
         for j in range(len(solutions_scores)):
             if solutions_scores[j][1] < solutions_scores[i][1] and solutions_scores[j][2] < solutions_scores[i][2]:
                 opt = False
+            elif solutions_scores[j][1] <= solutions_scores[i][1] and solutions_scores[j][2] < solutions_scores[i][2]:
+                opt = False
+            elif solutions_scores[j][1] < solutions_scores[i][1] and solutions_scores[j][2] <= solutions_scores[i][2]:
+                opt = False
         if opt:
             optimal_solutions.append(solutions_scores[i][0])
         else:
@@ -79,3 +83,11 @@ if __name__ == '__main__':
     plt.plot(three_trucks.find_total_dist(ind), three_trucks.find_weighted_dist(ind), 'o', color='blue')
 
     plt.show()
+
+    solutions = []
+    for data in make_list_from_csv("../results/To Keep/New/all_data_filtered"):
+        if data not in solutions:
+            solutions.append(data)
+
+    three_trucks.save_csv(solutions, "../results/To Keep/New/solutions")
+

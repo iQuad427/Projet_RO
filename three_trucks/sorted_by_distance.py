@@ -30,7 +30,7 @@ def sorted_population_dist(pop):
 if __name__ == '__main__':
     three_trucks.distance_matrix = three_trucks.import_matrix("../resources/matrix.csv")
 
-    population = make_list_from_csv("../results/To Keep/New/all_data_filtered")
+    population = make_list_from_csv("../results/To Keep/New/solutions")
     sorted_pop = sorted_population_dist(population)
 
     three_trucks.save_csv(sorted_pop, "../results/To Keep/New/filtered_sorted")

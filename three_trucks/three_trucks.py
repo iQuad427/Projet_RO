@@ -14,7 +14,7 @@ import csv
 
 """ Parameters """
 # Population size
-pop_size = 15000
+pop_size = 10000
 # Number of counties
 number_of_counties = 19
 # Number of salesmen
@@ -22,7 +22,7 @@ number_of_truck = 3
 # Number of iterations to run the algorithm
 it = 10
 # Trying multiple times on the same weight
-tries_on_same_weight = 20
+tries_on_same_weight = 1
 # Distance between two tested weights
 precision_of_pareto = 100
 # Number of breeds at each iteration

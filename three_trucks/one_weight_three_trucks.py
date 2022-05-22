@@ -29,6 +29,8 @@ def simulate_one_weight(weight: float):
         results_ind.append(res[0][0])
         print("score :      " + str(score(res[0][0], weight, weight_constant)))
         print("distance :   " + str(find_total_dist(res[0][0])))
+        print("risk :       " + str(find_weighted_dist(res[0][0])))
+        print("individual : " + str(res[0][0]))
         results_scores.append([find_total_dist(results_ind[-1]), find_weighted_dist(results_ind[-1])])
 
     x_val = [lst[0] for lst in results_scores]
@@ -37,9 +39,9 @@ def simulate_one_weight(weight: float):
 
 
 if __name__ == '__main__':
-    three_trucks.distance_matrix= three_trucks.import_matrix("../resources/matrix.csv")
+    three_trucks.distance_matrix = three_trucks.import_matrix("../resources/matrix.csv")
 
-    weight = 1
+    weight = 0.3
     x, y, results = simulate_one_weight(weight)
     file_name = f"../results/{pop_size}pop_{number_of_counties}_{number_of_truck}_{it}it_{tries_on_same_weight}try_{weight}weight_{round(children_fraction_in_population * 100)}child.csv"
     save_csv(results, file_name)
